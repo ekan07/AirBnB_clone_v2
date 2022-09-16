@@ -1,143 +1,92 @@
 #!/usr/bin/python3
-"""This is the db storage class for AirBnB"""
-import datetime
-from os import getenv
-from sqlalchemy.orm import sessionmaker, scoped_session
+"""This module defines a class to manage db storage for hbnb clone"""
+import os
 from sqlalchemy import create_engine
-from models.base_model import BaseModel, Base
-from models.user import User
-from models.state import State
+from sqlalchemy.orm import sessionmaker, scoped_session
 from models.city import City
-from models.amenity import Amenity
 from models.place import Place
 from models.review import Review
+from models.state import State
+from models.user import User
+from models.amenity import Amenity
+from models.base_model import Base
 
 
-class DBStorage():
-    """
-    Database Engine for AirBnB project
-    """
+classes = {"Amenity": Amenity, "City": City,
+           "Place": Place, "Review": Review, "State": State, "User": User}
+
+
+class DBStorage:
+    """This class manages storage of hbnb models in JSON a relational DB"""
     __engine = None
     __session = None
 
     def __init__(self):
-        """Init method"""
-        self.__engine = create_engine('mysql+mysqldb://{}:{}@{}/{}'
-                                      .format(getenv('HBNB_MYSQL_USER'),
-                                              getenv('HBNB_MYSQL_PWD'),
-                                              getenv('HBNB_MYSQL_HOST'),
-                                              getenv('HBNB_MYSQL_DB')),
-                                      pool_pre_ping=True)
-        if getenv('HBNB_ENV') == 'test':
-            Base.metadata.drop_all(bind=self.__engine)
+        """Creates the engine"""
+        dialect = "mysql"
+        driver = "mysqldb"
+        port = 3306
+        user = os.getenv("HBNB_MYSQL_USER")
+        passwd = os.getenv("HBNB_MYSQL_PWD")
+        host = os.getenv("HBNB_MYSQL_HOST")
+        db_name = os.getenv("HBNB_MYSQL_DB")
+
+        db_uri = "{}+{}://{}:{}@{}:{}/{}".format(
+            dialect, driver, user, passwd, host, port, db_name)
+
+        self.__engine = create_engine(db_uri, pool_pre_ping=True)
+
+        if os.getenv("HBNB_ENV") == "test":
+            Base.metadata.drop_all(self.__engine)
 
     def all(self, cls=None):
-        """Returns dictionary with all objects depending
-        of the class name (argument cls)"""
+        """Returns a dictionary of models currently in storage"""
+        new_dict = {}
         if cls:
-            objs = self.__session.query(self.classes()[cls])
-        else:
-            objs = self.__session.query(State).all()
-            objs += self.__session.query(City).all()
-            objs += self.__session.query(User).all()
-            objs += self.__session.query(Place).all()
-            objs += self.__session.query(Amenity).all()
-            objs += self.__session.query(Review).all()
+            if type(cls) == str:
+                cls = classes[cls]
 
-        dic = {}
-        for obj in objs:
-            k = '{}.{}'.format(type(obj).__name__, obj.id)
-            dic[k] = obj
-        return dic
+            objs = self.__session.query(cls).all()
+            for obj in objs:
+                key = obj.__class__.__name__ + "." + obj.id
+                new_dict[key] = obj
+
+            return new_dict
+        else:
+            for cls in classes.values():
+                objs = self.__session.query(cls).all()
+                for obj in objs:
+                    key = obj.__class__.__name__ + "." + obj.id
+                    new_dict[key] = obj
+
+            return new_dict
 
     def new(self, obj):
-        """Add the object to the current
-        database session (self.__session)"""
+        """Adds new object to current database session"""
         self.__session.add(obj)
 
     def save(self):
-        """Commit all changes of the current
-        database session (self.__session)"""
+        """Commit all changes of the current database session """
         self.__session.commit()
 
+    def reload(self):
+        """
+        create all tables in the database
+        create the current database session from the engine
+        """
+        Base.metadata.create_all(self.__engine)
+        sesn_factory = sessionmaker(bind=self.__engine, expire_on_commit=False)
+        Session = scoped_session(sesn_factory)
+        self.__session = Session()
+
     def delete(self, obj=None):
-        """Delete from the current database session obj if not None"""
+        """
+        Deletes objects from current database session and does nothing if obj
+        is None
+        """
         if obj:
             self.__session.delete(obj)
 
-    def reload(self):
-        """Create the current database session (self.__session) from
-        the engine (self.__engine) by using a sessionmaker"""
-        from models.user import User
-        from models.state import State
-        from models.city import City
-        from models.amenity import Amenity
-        from models.place import Place
-        from models.review import Review
-
-        Base.metadata.create_all(self.__engine)
-        self.__session = sessionmaker(bind=self.__engine,
-                                      expire_on_commit=False)
-        Session = scoped_session(self.__session)
-        self.__session = Session()
-
     def close(self):
-        """Removes the session"""
+        """Close the working SQLAlchemy session."""
         self.__session.close()
-
-    def classes(self):
-        """Returns a dictionary of valid classes and their references."""
-        from models.base_model import BaseModel
-        from models.user import User
-        from models.state import State
-        from models.city import City
-        from models.amenity import Amenity
-        from models.place import Place
-        from models.review import Review
-
-        classes = {"BaseModel": BaseModel,
-                   "User": User,
-                   "State": State,
-                   "City": City,
-                   "Amenity": Amenity,
-                   "Place": Place,
-                   "Review": Review}
-        return classes
-
-    def attributes(self):
-        """Returns the valid attributes and their types for classname."""
-        attributes = {
-            "BaseModel":
-                     {"id": str,
-                      "created_at": datetime.datetime,
-                      "updated_at": datetime.datetime},
-            "User":
-                     {"email": str,
-                      "password": str,
-                      "first_name": str,
-                      "last_name": str},
-            "State":
-                     {"name": str},
-            "City":
-                     {"state_id": str,
-                      "name": str},
-            "Amenity":
-                     {"name": str},
-            "Place":
-                     {"city_id": str,
-                      "user_id": str,
-                      "name": str,
-                      "description": str,
-                      "number_rooms": int,
-                      "number_bathrooms": int,
-                      "max_guest": int,
-                      "price_by_night": int,
-                      "latitude": float,
-                      "longitude": float,
-                      "amenity_ids": list},
-            "Review":
-            {"place_id": str,
-                         "user_id": str,
-                         "text": str}
-        }
-        return attributes
