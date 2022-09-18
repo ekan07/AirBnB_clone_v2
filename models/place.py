@@ -19,28 +19,41 @@ if getenv('HBNB_TYPE_STORAGE') == 'db':
 
 
 class Place(BaseModel, Base):
-    """ A place to stay """
+    """Place class
+    Attributes:
+        city_id: city id
+        user_id: user id
+        name: name input
+        description: string of description
+        number_rooms: number of room in int
+        number_bathrooms: number of bathrooms in int
+        max_guest: maximum guest in int
+        price_by_night:: pice for a staying in int
+        latitude: latitude in flaot
+        longitude: longitude in float
+        amenity_ids: list of Amenity ids
+    """
     __tablename__ = 'places'
     city_id = Column(String(60), ForeignKey('cities.id'), nullable=False)
     user_id = Column(String(60), ForeignKey('users.id'), nullable=False)
     name = Column(String(128), nullable=False)
-    description = Column(String(1024))
+    description = Column(String(1024), nullable=False)
     number_rooms = Column(Integer, default=0, nullable=False)
     number_bathrooms = Column(Integer, default=0, nullable=False)
     max_guest = Column(Integer, default=0, nullable=False)
     price_by_night = Column(Integer, default=0, nullable=False)
-    latitude = Column(Float)
-    longitude = Column(Float)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
     amenity_ids = []
 
     if getenv('HBNB_TYPE_STORAGE') == 'db':
         reviews = relationship("Review",
                                backref="place",
-                               cascade="all, delete, delete-orphan")
+                               cascade="all, delete-orphan")
 
         amenities = relationship("Amenity",
                                  secondary='place_amenity',
-                                 back_populates="place_amenities",
+                                 backref="place_amenities",
                                  viewonly=False)
     else:
         @property
@@ -48,17 +61,16 @@ class Place(BaseModel, Base):
             """Returns a list of 'Review' instances for this place"""
             from models import storage
             all_reviews = storage.all(Review)
-            my_reviews = [rr for rr in all_reviews.values()
-                          if rr.place_id == self.id]
-            return my_reviews
+            return [review for review in all_reviews.values()
+                          if review.place_id == self.id]
 
         @property
         def amenities(self):
             """Return a list of 'Amenity' instances for this place"""
             from models import storage
             all_amenities = storage.all(Amenity)
-            my_amenities = [amen for amen in all_amenities.values()
-                            if amen.id in self.amenity_ids]
+            return [amenity for amenity in all_amenities.values()
+                            if amenity.id in self.amenity_ids]
 
         @amenities.setter
         def amenities(self, value):
