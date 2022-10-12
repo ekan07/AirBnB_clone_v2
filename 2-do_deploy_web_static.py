@@ -20,7 +20,7 @@ def do_deploy(archive_path):
     """Deploy web files to server
     """
     if not (os.path.exists(archive_path)):
-            return False
+        return False
     # os.path.basename gets the base name of the specified path
     remote_archive = '/tmp/' + os.path.basename(archive_path)
     # os.path.splitext splits the archive_path in root and ext pair
@@ -32,7 +32,7 @@ def do_deploy(archive_path):
 
     # create target dir and uncompress archive and delete .tgz
     r = sudo('mkdir -p {} && tar -xvf {} -C {}'.format(
-    remote_to_xfolder, remote_archive, remote_to_xfolder))
+        remote_to_xfolder, remote_archive, remote_to_xfolder))
     if r.stderr:
         return False
     # remove remote archive file
@@ -43,9 +43,8 @@ def do_deploy(archive_path):
     sudo('rm -f /data/web_static/current')
     # re-establish symbolic link
     sudo('ln -s {} {}'.format(
-    remote_to_xfolder + '/web_static', '/data/web_static/current'))
+        remote_to_xfolder + '/web_static', '/data/web_static/current'))
 
     # return True on success
     print('New version deployed!')
     return True
-    

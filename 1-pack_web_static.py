@@ -18,7 +18,8 @@ def do_pack():
     print('Packing web_static to ' + archived_file_path)
 
     # Create TAR file
-    t_gzip_archive = local('tar  -cvzf {} {}'.format(archived_file_path, 'web_static'))
+    t_gzip_archive = local(
+        'tar  -cvzf {} {}'.format(archived_file_path, 'web_static'))
     if t_gzip_archive.failed:
         return None
 
