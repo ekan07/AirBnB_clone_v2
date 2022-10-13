@@ -50,6 +50,19 @@ def do_deploy(archive_path):
     r = sudo('rm ' + remote_archive)
     if r.stderr:
         return False
+
+    move contents into remote web_static
+    eg: mv /data/web_static/releases/web_static_20221011142737/web_static/* 
+    r = sudo('mv {}/web_static/* {}/'.format(remote_to_xfolder, remote_to_xfolder))
+    if r.stderr:
+        print('No move')
+        return False
+    eg: rm -rf /data/web_static/releases/web_static_20221011142737/web_static
+    r = sudo('rm -rf {}/web_static'.format(remote_to_xfolder))
+    if r.stderr:
+        print('No remove')
+        return False
+
     # delete pre-existing sym link
     sudo('rm -rf /data/web_static/current')
     # re-establish symbolic link
