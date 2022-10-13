@@ -15,21 +15,14 @@ def do_pack():
 
     archived_file_path = "versions/web_static_{}.tgz".format(
         datetime.strftime(datetime.now(), "%Y%m%d%H%M%S"))
-
     if not os.path.exists('versions'):
         os.mkdir('versions')
-
-    print('Packing web_static to ' + archived_file_path)
 
     # Create TAR file
     t_gzip_archive = local(
         'tar  -cvzf {} {}'.format(archived_file_path, 'web_static'))
     if t_gzip_archive.failed:
         return None
-
-    file_stats = os.stat(archived_file_path)
-    print('web_static packed: {} -> {}Bytes'.format(
-        archived_file_path, file_stats.st_size))
 
     return t_gzip_archive
 
@@ -40,12 +33,8 @@ def do_deploy(archive_path):
     if not (os.path.exists(archive_path)):
         return False
     # remote_archive = /tmp/web_static_20221011142737.tgz
-    # remote_to_xfolder = /data/web_static/releases/web_static_20221011142737/
-    # os.path.basename gets the base name of the specified path
-    # E.g 'web_static_20221011142737.tgz'
     remote_archive = '/tmp/' + os.path.basename(archive_path)
-    # os.path.splitext splits the archive_path in root and ext pair and
-    # get the root: '/data/web_static/releases/' + 'web_static_20221011142737'
+    # remote_to_xfolder = /data/web_static/releases/web_static_20221011142737/
     remote_to_xfolder = '/data/web_static/releases/'
     remote_to_xfolder += os.path.splitext(os.path.basename(archive_path))[0]
     # upload archive
@@ -64,7 +53,6 @@ def do_deploy(archive_path):
     # delete pre-existing sym link
     sudo('rm -rf /data/web_static/current')
     # re-establish symbolic link
-    # ln -s /data/web_static/releases/web_static_20221011142737/web_static /data/web_static/current
     sudo('ln -s {} {}'.format(
         remote_to_xfolder + '/web_static', '/data/web_static/current'))
     
