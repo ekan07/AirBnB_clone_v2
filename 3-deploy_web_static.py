@@ -31,7 +31,9 @@ def do_pack():
     print('web_static packed: {} -> {}Bytes'.format(
         archived_file_path, file_stats.st_size))
 
-    return t_gzip_archive
+    archive_path = os.path.realpath(
+        archived_file_path) if not t_gzip_archive.stderr else None
+    return archive_path
 
 
 def do_deploy(archive_path):
