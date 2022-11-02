@@ -19,7 +19,7 @@ def do_pack():
 
     # Create TAR file
     t_gzip_archive = local(
-        'tar  -cvzf {} {}'.format(archived_file_path, 'web_static'))
+        'tar  -cvzf {} {}'.format(archived_file_path, 'web_static'), capture=True)
     if t_gzip_archive.failed:
         return None
 
@@ -27,4 +27,8 @@ def do_pack():
     print('web_static packed: {} -> {}Bytes'.format(
         archived_file_path, file_stats.st_size))
 
-    return t_gzip_archive
+    # eg: /home/ekan16/AirBnB_clone_v2/AirBnB_clone_v2/
+    # versions/web_static_20221014115953.tgz
+    archive_path = os.path.realpath(
+        archived_file_path) if not t_gzip_archive.stderr else None
+    return archive_path

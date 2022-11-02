@@ -21,5 +21,5 @@ ln -sf /data/web_static/releases/test /data/web_static/current
 # update /data ownership
 chown -R ubuntu:ubuntu /data
 # update nginx configuration
-sed -i '53i \\tlocation \/hbnb_static {\n\t\t alias /data/web_static/current;\n\t}' /etc/nginx/sites-available/default
+sed -i '55i \\tlocation \/hbnb_static {\n\t\t alias /data/web_static/current;\n\t}' /etc/nginx/sites-available/default
 service nginx restart

@@ -23,6 +23,6 @@ class State(BaseModel, Base):
             """Return the list of City instances corresponding to this state"""
             from models import storage
             my_cities = storage.all(City)
-            state_city = [cc for cc in my_cities.values()
-                          if cc.state_id == self.id]
+            state_city = [city for city in my_cities.values()
+                          if city.state_id == self.id]
             return state_city
