@@ -75,8 +75,8 @@ class DBStorage:
         create the current database session from the engine
         """
         Base.metadata.create_all(self.__engine)
-        sesn_factory = sessionmaker(bind=self.__engine, expire_on_commit=False)
-        Session = scoped_session(sesn_factory)
+        self.__session = sessionmaker(bind=self.__engine, expire_on_commit=False)
+        Session = scoped_session(self.__session)
         self.__session = Session()
 
     def delete(self, obj=None):
