@@ -3,7 +3,6 @@
 a script that starts a Flask web application in which
 one route accepts user input
 """
-
 from flask import Flask
 app = Flask(__name__)
 
@@ -27,5 +26,5 @@ def message(text):
     return 'C %s' % text
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
